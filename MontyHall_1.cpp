@@ -1,203 +1,144 @@
-/**
- * Assignment 2. Monty Hall Problem
- *
- * Simulate the Monty Hall probability problem.
- * Are you better off making a second door choice or
- * staying with your first door choice to win the car?
- * See https://en.wikipedia.org/wiki/Monty_Hall_problem
- *
- * Author: Ron Mak
- *         Department of Computer Science
- *         San Jose State University
- */
-
 #include <iostream>
 #include <fstream>
+#include <time.h>
 #include <iomanip>
-#include <ctime>
-
-//#define NDEBUG
-#include <cassert>
-
+/***** Complete this program. *****/
 using namespace std;
 typedef int Door;
 
-const int SIMULATION_COUNT = 100;
+const int SIMULATION_COUNT = 100000;
 
-/**
- * Run a simulation.
- * @param sequence the sequence number.
- * @param win1 number of first choice wins.
- * @param win2 number of second choice wins.
- */
-void simulate(int sequence, int& win1, int& win2);
+void print_head();
 
-/**
- * Hide the car behind a door.
- * @return the door that the car is hidden behind.
- */
-Door hide_car();
+void print_tail(int &win1, int &win2);
 
-/**
- * @return the player's first door choice, which is either 1, 2, or 3.
- */
-Door make_first_choice();
+Door hideCar();
 
-/**
- * Open a door that is not:
- * @param first_choice_door the player's first door choice.
- * @param car_behind_door the door that the car is hidden behind.
- * @return the door to open.
- */
-Door open_door(Door first_choice_door, Door car_behind_door);
+Door makeFirstChoice();
 
-/**
- * Return the player's second door choice, which cannot be:
- * @param first_door the player's first choice door.
- * @param opened_door the opened door.
- * @return the second door choice.
- */
-Door make_second_choice(Door first_door, Door opened_door);
+Door openDoor(Door car_here, Door first_choice);
 
-/**
- * @return a random door 1, 2, or 3.
- */
-Door random_door();
+Door makeSecondChoice(Door first_choice, Door opened_door);
 
-/**
- * Return a random door 1, 2, or 3 that is not:
- * @param a_door a door.
- * @param another_door another door, which can be equal to a_door.
- * @return the random door.
- */
-Door random_door_not(Door a_door, Door another_door);
+void simulate(int i, int &win1, int &win2);
 
-/**
- * Choose door 1, 2, or 3 that is not:
- * @param first_door the player's first door choice.
- * @param opened_door the opened door.
- * @return the remaining door.
- */
-Door choose_remaining_door(Door first_door, Door opened_door);
-
-/**
- * Main
- */
 int main()
 {
+    srand(time(NULL));
     int win1 = 0, win2 = 0;
 
-    cout << "   #     Car   First  Opened  Second    Win    Win" << endl;
-    cout << "        here  choice    door  choice  first second" << endl;
-    cout << endl;
+    print_head();
 
-    srand(time(NULL));  // seed the random number generator
-
-    // Run the simulations.
-    for (int i = 1; i <= SIMULATION_COUNT; i++) simulate(i, win1, win2);
-
-    cout << endl;
-    cout << setw(4) << win1 << " wins if stay with the first choice" << endl;
-    cout << setw(4) << win2 << " wins if switch to the second choice" << endl;
-
-    cout.setf(ios::fixed);
-    cout.setf(ios::showpoint);
-    cout.precision(1);
-
-    cout << endl;
-    cout << "Win ratio of switch over stay: ";
-    cout << static_cast<double>(win2)/win1 << endl;
+    for (int i = 1; i <= SIMULATION_COUNT; i++)
+    {
+        simulate(i, win1, win2);
+    }
+    print_tail(win1, win2);
+    return 0;
 }
 
-void simulate(int sequence, int& win1, int& win2)
+void simulate(int i, int &win1, int &win2)
 {
-    // Perform a simulation.
-    Door car_behind_door    = hide_car();
-    Door first_choice_door  = make_first_choice();
-    Door opened_door        = open_door(first_choice_door,
-                                        car_behind_door);
-    Door second_choice_door = make_second_choice(first_choice_door,
-                                                 opened_door);
+    Door car_here, first_choice, opened_door, second_choice;
 
-    // Print the results.
-    cout << setw(4) << sequence << setw(8) << car_behind_door;
-    cout << setw(8) << first_choice_door << setw(8) << opened_door;
-    cout << setw(8) << second_choice_door;
+    car_here = hideCar();
+    first_choice = makeFirstChoice();
+    opened_door = openDoor(car_here, first_choice);
+    second_choice = makeSecondChoice(first_choice, opened_door);
 
-    if (first_choice_door == car_behind_door)
+    cout << i << setw(10)
+         << car_here << setw(10)
+         << first_choice << setw(10)
+         << opened_door << setw(10)
+         << second_choice;
+
+    if (first_choice == car_here)
     {
-        cout << "    yes";  // the car was behind the first door choice
+        cout << setw(10) << "yes" << endl;
         win1++;
     }
-    else
+    else if (second_choice == car_here)
     {
-        cout << "           yes";  // it was behind the second door choice
+        cout << setw(20) << "yes" << endl;
         win2++;
     }
-
-    cout << endl;
 }
 
-Door hide_car()
+Door hideCar()
 {
-    // The simulation randomly chooses the door to hide the car.
-    return random_door();
+    Door hide_car;
+    hide_car = 1 + (rand() % 3);
+    return hide_car;
 }
 
-Door make_first_choice()
+Door makeFirstChoice()
 {
-    // The simulation randomly makes the player's first door choice.
-    return random_door();
+    Door first_choice_t;
+    first_choice_t = 1 + (rand() % 3);
+    return first_choice_t;
 }
 
-Door open_door(Door first_choice_door, Door car_behind_door)
+Door openDoor(Door car_here_t, Door first_choice_t)
 {
-    // Monty Hall knows which door the car is behind
-    // and so he opens a door that has a goat behind it.
-    Door opened_door = random_door_not(first_choice_door, car_behind_door);
-
-    assert(   (opened_door != first_choice_door)
-           && (opened_door != car_behind_door));
-    return opened_door;
-}
-
-Door make_second_choice(Door first_door, Door opened_door)
-{
-    // The player's second door choice can't be
-    // the first door choice or the opened door.
-    Door second_choice = choose_remaining_door(first_door, opened_door);
-
-    assert(   (second_choice != first_door)
-           && (second_choice != opened_door));
-    return second_choice;
-}
-
-Door random_door()
-{
-    return rand()%3 + 1;
-}
-
-Door random_door_not(Door a_door, Door another_door)
-{
-    Door door;
-
-    // If doors a_door and another_door are the same, then randomly
-    // choose between the other two doors to return.
-    // Otherwise, return the third door.
-    do {
-        door = random_door();
-    } while ((door == a_door) || (door == another_door));
-
-    return door;
-}
-
-Door choose_remaining_door(Door first_door, Door opened_door)
-{
-    // Check door 1 and door 2.
-    for (Door door = 1; door <= 2; door++)
+    Door open_Door_temp;
+    int flag = 0;
+    do
     {
-        if ((door != first_door) && (door != opened_door)) return door;
-    }
+        open_Door_temp = 1 + (rand() % 3);
+        if ((open_Door_temp != car_here_t) && (open_Door_temp != first_choice_t))
+        {
+            flag = 1;
+        }
+    } while (!flag);
 
-    return 3;  // if not door 1 or door 2
+    return open_Door_temp;
+}
+
+Door makeSecondChoice(Door first_choice_t, Door opened_door_t)
+{
+    Door open_Door2_temp;
+    int flag = 0;
+    do
+    {
+        open_Door2_temp = 1 + (rand() % 3);
+        if ((open_Door2_temp != opened_door_t) && (open_Door2_temp != first_choice_t))
+        {
+            flag = 1;
+        }
+    } while (!flag);
+
+    return open_Door2_temp;
+}
+
+void print_head()
+{
+    cout << "#" << setw(10)
+         << "Car" << setw(10)
+         << "First" << setw(10)
+         << "Opened" << setw(10)
+         << "Second" << setw(10)
+         << "Win" << setw(10)
+         << "Win" << endl;
+
+    cout << setw(11)
+         << "here" << setw(10)
+         << "choice" << setw(10)
+         << "door" << setw(10)
+         << "choice" << setw(10)
+         << "first" << setw(10)
+         << "second" << endl;
+}
+
+void print_tail(int &win1, int &win2)
+{
+    double ratio = (double)(win2) / (win1);
+    cout << win1
+         << "wins if stay with the first choice"
+         << endl
+         << win2
+         << "wins if switch to the second choice"
+         << endl
+         << "Win ratio of switch over stay: "
+         << ratio
+         << endl;
 }
