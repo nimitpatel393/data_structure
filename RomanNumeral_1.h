@@ -13,6 +13,9 @@ public:
     RomanNumeral();
 
     /***** Complete this class declaration. *****/
+    private:
+    int decimal;
+    string roman;
 };
 
 #endif /* ROMANNUMERAL_H_ */

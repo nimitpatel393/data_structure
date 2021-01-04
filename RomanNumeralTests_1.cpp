@@ -1,6 +1,6 @@
 #include <iostream>
 #include <fstream>
-#include "RomanNumeral.h"
+#include "RomanNumeral_1.h"
 
 using namespace std;
 
@@ -30,7 +30,7 @@ void test2(ifstream& in);
  */
 int main()
 {
-    test1();
+    //test1();
 
     ifstream in;
     in.open(INPUT_FILE_NAME);
@@ -40,7 +40,7 @@ int main()
         return -1;
     }
 
-    test2(in);
+   // test2(in);
     return 0;
 }
 
